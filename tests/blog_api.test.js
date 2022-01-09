@@ -16,13 +16,16 @@ beforeEach(async () => {
     await blogObject.save()
 })
 
-test('notes are returned as json', async () => {
-    const response = await api
-        .get('/api/blogs')
-        .expect(200)
-        .expect('Content-Type', /application\/json/)
+test('blogs are returned with correct length', async () => {
+    const response = await api.get('/api/blogs')
 
     expect(response.body).toHaveLength(helper.initialBlogs.length)
+})
+
+test('blogs have id as identifier', async () => {
+    const response = await api.get('/api/blogs');
+
+    expect(response.body[0].id).toBeDefined()
 })
 
 afterAll(() => {
