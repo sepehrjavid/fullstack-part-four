@@ -47,6 +47,18 @@ test('blogs are created successfully', async () => {
     expect(createdBlog).toEqual(newBlog)
 })
 
+test('default like value for like', async () => {
+    const newBlog = {
+        title: "new",
+        author: "new",
+        url: "new"
+    }
+    const response = await api.post('/api/blogs').send(newBlog).expect(201)
+
+    const createdBlog = response.body
+    expect(createdBlog.likes).toBe(0)
+})
+
 afterAll(() => {
     mongoose.connection.close()
 })
