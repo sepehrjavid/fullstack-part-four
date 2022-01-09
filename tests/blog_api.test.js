@@ -17,15 +17,34 @@ beforeEach(async () => {
 })
 
 test('blogs are returned with correct length', async () => {
-    const response = await api.get('/api/blogs')
+    const response = await api.get('/api/blogs').expect(200)
 
     expect(response.body).toHaveLength(helper.initialBlogs.length)
 })
 
 test('blogs have id as identifier', async () => {
-    const response = await api.get('/api/blogs');
+    const response = await api.get('/api/blogs').expect(200);
 
     expect(response.body[0].id).toBeDefined()
+})
+
+
+test('blogs are created successfully', async () => {
+    const newBlog = {
+        title: "new",
+        author: "new",
+        url: "new",
+        likes: 1
+    }
+    const response = await api.post('/api/blogs').send(newBlog).expect(201)
+
+    dbBlogs = await helper.blogsInDb()
+
+    expect(dbBlogs).toHaveLength(helper.initialBlogs.length + 1)
+
+    const createdBlog = response.body
+    delete createdBlog.id
+    expect(createdBlog).toEqual(newBlog)
 })
 
 afterAll(() => {
