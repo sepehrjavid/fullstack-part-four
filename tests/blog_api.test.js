@@ -114,6 +114,28 @@ describe('Deleting Blog', () => {
     })
 })
 
+describe('Updating Blog', () => {
+    test('Check for successful delete', async () => {
+        const initialBlogs = await helper.blogsInDb()
+        const blogToUpdate = initialBlogs[0]
+
+        blogToUpdate.title = "updated"
+
+        await api.put(`/api/blogs/${blogToUpdate.id}`)
+            .expect(200)
+            .expect('Content-Type', /application\/json/)
+
+        const updateBlogs = await helper.blogsInDb()
+        const titles = updateBlogs.map(r => r.title)
+        expect(titles).not.toContain(blogToUpdate.title)
+    })
+
+    test('Checksum for 400 if invalid id', async () => {
+        await api.delete('/api/blogs/dummy').expect(400)
+    })
+})
+
+
 afterAll(() => {
     mongoose.connection.close()
 })
