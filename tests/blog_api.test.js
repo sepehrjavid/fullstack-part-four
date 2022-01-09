@@ -59,6 +59,23 @@ test('default like value for like', async () => {
     expect(createdBlog.likes).toBe(0)
 })
 
+
+test('title requirement test', async () => {
+    const newBlog = {
+        author: "new",
+        url: "new"
+    }
+    await api.post('/api/blogs').send(newBlog).expect(400)
+})
+
+test('url requirement test', async () => {
+    const newBlog = {
+        title: "new",
+        author: "new",
+    }
+    await api.post('/api/blogs').send(newBlog).expect(400)
+})
+
 afterAll(() => {
     mongoose.connection.close()
 })
