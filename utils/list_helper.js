@@ -32,9 +32,31 @@ const mostBlogs = (blogs) => {
     }
 }
 
+const mostLikes = (blogs) => {
+    var authorBlogLikes = {}
+    blogs.forEach((blog) => {
+        if (authorBlogLikes.hasOwnProperty(blog.author)) {
+            authorBlogLikes[blog.author] += blog.likes
+        } else {
+            authorBlogLikes[blog.author] = blog.likes
+        }
+    })
+
+    var mostPopularAuthor = Object.keys(authorBlogLikes).reduce(
+        (mostPopularAuthor, author) => authorBlogLikes[author] > authorBlogLikes[mostPopularAuthor] ? author : mostPopularAuthor,
+        Object.keys(authorBlogLikes)[0]);
+
+
+    return {
+        author: mostPopularAuthor,
+        blogs: authorBlogLikes[mostPopularAuthor]
+    }
+}
+
 module.exports = {
     dummy,
     totalLikes,
     favoriteBlog,
-    mostBlogs
+    mostBlogs,
+    mostLikes
 }
