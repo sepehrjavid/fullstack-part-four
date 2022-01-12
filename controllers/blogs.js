@@ -11,9 +11,10 @@ blogsRouter.get('/', async (request, response) => {
 
 blogsRouter.post('/', async (request, response) => {
     const blog = new Blog(request.body)
-    const decodedToken = jwt.verify(request.token, process.env.SECRET)
 
+    const decodedToken = jwt.verify(request.token, process.env.SECRET)
     const user = await User.findById(decodedToken.id)
+
     blog.user = user._id
     const savedBlog = await blog.save()
     user.blogs = user.blogs.concat(savedBlog._id)
@@ -23,8 +24,22 @@ blogsRouter.post('/', async (request, response) => {
 })
 
 blogsRouter.delete('/:id', async (request, response) => {
-    await Blog.findByIdAndRemove(request.params.id)
-    response.status(204).end()
+    const blog = await Blog.findById(request.params.id)
+
+    const decodedToken = jwt.verify(request.token, process.env.SECRET)
+    const user = await User.findById(decodedToken.id)
+
+    if (blog === null) {
+        response.status(404).json({error: 'blog not found'})
+        return
+    }
+
+    if (blog.user.toString() === user._id.toString()) {
+        blog.remove()
+        response.status(204).end()
+    } else {
+        response.status(403).json({error: 'user is not the owner of the blog'})
+    }
 })
 
 blogsRouter.put('/:id', async (request, response) => {
