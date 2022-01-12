@@ -1,19 +1,49 @@
 const supertest = require('supertest')
 const mongoose = require('mongoose')
+const jwt = require('jsonwebtoken')
 const helper = require('./test_helper')
 const app = require('../app')
+const bcrypt = require('bcrypt')
 
 const api = supertest(app)
 
 
 const Blog = require('../models/blog')
+const User = require('../models/user')
+
+const globals = {}
 
 beforeEach(async () => {
     await Blog.deleteMany({})
+    await User.deleteMany({})
+
+    const user = helper.initialUsers[0]
+    const saltRounds = 10
+    const passwordHash = await bcrypt.hash(user.password, saltRounds)
+
+    const userObject = new User({
+        username: user.username,
+        name: user.name,
+        passwordHash,
+    })
+
+    const savedUser = await userObject.save()
+    const userForToken = {
+        username: savedUser.username,
+        id: savedUser._id,
+    }
+
     let blogObject = new Blog(helper.initialBlogs[0])
-    await blogObject.save()
+    blogObject.user = savedUser._id
+    let savedBlog = await blogObject.save()
     blogObject = new Blog(helper.initialBlogs[1])
+    blogObject.user = savedUser._id
+    savedUser.blogs = savedUser.blogs.concat(savedBlog._id)
     await blogObject.save()
+
+    await savedUser.save()
+
+    globals.token = `Bearer ${jwt.sign(userForToken, process.env.SECRET)}`
 })
 
 
@@ -42,7 +72,7 @@ describe('Adding Blog', () => {
             title: "new",
             author: "new",
         }
-        await api.post('/api/blogs').send(newBlog)
+        await api.post('/api/blogs').send(newBlog).set('Authorization', globals.token)
             .expect(400)
     })
 
@@ -51,7 +81,7 @@ describe('Adding Blog', () => {
             author: "new",
             url: "new"
         }
-        await api.post('/api/blogs').send(newBlog)
+        await api.post('/api/blogs').send(newBlog).set('Authorization', globals.token)
             .expect(400)
     })
 
@@ -61,7 +91,7 @@ describe('Adding Blog', () => {
             author: "new",
             url: "new"
         }
-        const response = await api.post('/api/blogs').send(newBlog)
+        const response = await api.post('/api/blogs').send(newBlog).set('Authorization', globals.token)
             .expect(201)
             .expect('Content-Type', /application\/json/)
 
@@ -76,7 +106,7 @@ describe('Adding Blog', () => {
             url: "new",
             likes: 1
         }
-        const response = await api.post('/api/blogs').send(newBlog)
+        const response = await api.post('/api/blogs').send(newBlog).set('Authorization', globals.token)
             .expect(201)
             .expect('Content-Type', /application\/json/)
 
@@ -85,6 +115,7 @@ describe('Adding Blog', () => {
 
         const createdBlog = response.body
         delete createdBlog.id
+        delete createdBlog.user
         expect(createdBlog).toEqual(newBlog)
     })
 
@@ -96,7 +127,7 @@ describe('Deleting Blog', () => {
         const initialBlogs = await helper.blogsInDb()
         const blogToDelete = initialBlogs[0]
 
-        await api.delete(`/api/blogs/${blogToDelete.id}`).expect(204)
+        await api.delete(`/api/blogs/${blogToDelete.id}`).set('Authorization', globals.token).expect(204)
 
         const finalBlogs = await helper.blogsInDb()
 
@@ -110,7 +141,7 @@ describe('Deleting Blog', () => {
     })
 
     test('Checksum for 400 if invalid id', async () => {
-        await api.delete('/api/blogs/dummy').expect(400)
+        await api.delete('/api/blogs/dummy').expect(400).set('Authorization', globals.token)
     })
 })
 
@@ -131,7 +162,7 @@ describe('Updating Blog', () => {
     })
 
     test('Checksum for 400 if invalid id', async () => {
-        await api.delete('/api/blogs/dummy').expect(400)
+        await api.put('/api/blogs/dummy').expect(400)
     })
 })
 

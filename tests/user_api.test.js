@@ -35,7 +35,7 @@ describe('User Creation', () => {
             name: "sep"
         }
 
-        await api.post('/api/blogs').send(newUser).expect(400)
+        await api.post('/api/users').send(newUser).expect(400)
     })
 
     test('Creation error with username length less than 3', async () => {
@@ -45,7 +45,7 @@ describe('User Creation', () => {
             name: "sep"
         }
 
-        await api.post('/api/blogs').send(newUser).expect(400)
+        await api.post('/api/users').send(newUser).expect(400)
     })
 
     test('Creation error without password', async () => {
@@ -54,7 +54,7 @@ describe('User Creation', () => {
             name: "sep"
         }
 
-        await api.post('/api/blogs').send(newUser).expect(400)
+        await api.post('/api/users').send(newUser).expect(400)
     })
 
     test('Creation error with password length less than 3', async () => {
@@ -64,7 +64,7 @@ describe('User Creation', () => {
             name: "sep"
         }
 
-        await api.post('/api/blogs').send(newUser).expect(400)
+        await api.post('/api/users').send(newUser).expect(400)
     })
 })
 
